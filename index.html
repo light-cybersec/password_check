@@ -48,7 +48,7 @@
           color: var(--text);
           font-size: 1rem;
           outline: none;
-          transition: border-color 0.3s box-shadow 0.2s;} 
+          transition: border-color 0.3s, box-shadow 0.2s;} 
 
         input:focus {
             border-color: var(--accent);
@@ -75,9 +75,21 @@
         
           button:active { transform: translateY(0); }
 
-/* strength bar, control the width and color with JS later */
+        /* style for the less important Show/Hide button */
+        .secondary {
+          background: transparent;
+          color: var(--text);
+          border: 2px solid var(--accent);
+        }
+
+        .secondary:hover {
+          background: var(--accent);
+          color: #0f172a;
+        }
+
+/* strength bar, controlled with JS */
     .bar {
-      height: 8px;
+      height: 11px;
       margin-top: 1.2rem;
       border-radius: 99px;
       background: #0f172a;
@@ -87,7 +99,7 @@
     #bar-fill {
       height: 100%;
       width: 0%;
-      background: #1e1449;
+      background: #0e5829;
       transition: width 0.4s, background 0.4s;
     }
 
@@ -114,8 +126,8 @@
     <h1> Let's see how strong your password actually is! </h1>
   
     <input type="password" id="password" placeholder="Please type your password here.. ">
-  
-    <button id="check">Check</button>
+
+    <button id="toggle" class="secondary">Show</button>
 
     <div class="bar"><div id="bar-fill"></div></div>
   
@@ -123,10 +135,85 @@
   </div>
 
   <script>
-// The logic of checking password here 
+  const passwordInput = document.getElementById("password");
+  const toggleButton = document.getElementById("toggle");
+  const barFill = document.getElementById("bar-fill");
+  const result = document.getElementById("result");
+
+  const commonPasswords = ["password", "123456", "qwerty", "letmein", "admin", 
+  "iloveyou", "abcdef", "monkey", "dragon", "111111", "baseball", "football", "welcome",
+  "login", "abc123", "starwars", "passw0rd", "master", "hello", "freedom", "whatever", "qazwsx", "trustno1", 
+"123123", "654321", "superman", "batman", "shadow", "sunshine", "princess", "flower", "hottie", "loveme", "zaq1zaq1", "password1", "password123", "password!", "password@", "password#", "password$", "password%",
+"password^", "password&", "password*", "password(", "password)", "password-", "password_", "password+", "password=", "password{", "password}", "password[", "password]", "password|", "password\\", "password:", "password;", "password'", "password\"", "password<", "password>", "password,", "password.", "password?", "password/", "password~", "password`", "password1!", "password2@", "password3#",
+"password4$", "password5%", "password6^", "password7&", "password8*", "password9(", "password0)", "password-", "password_", "password+", "password=", "password{", "password}", "password[", "password]", "password|", "password\\", "password:", "password;", "password'", "password\"", "password<", "password>", "password,", "password.", "password?", "password/",
+"password~", "password`", "123456789", "12345678", "1234567", "123456", "12345", "1234", "123", "12", "1"];
 
 
-  
+  function getScore(pw) {
+    let score = 0;
+
+    // 1. length: up to 40 points
+    score += Math.min(pw.length * 4, 40);
+
+    // 2. variety: 15 points each, up to 60
+    if (/[a-z]/.test(pw)) score += 15;
+    if (/[A-Z]/.test(pw)) score += 15;
+    if (/[0-9]/.test(pw)) score += 15;
+    if (/[^a-zA-Z0-9]/.test(pw)) score += 15;
+
+    // 3. penalties
+    if (commonPasswords.some(word => pw.toLowerCase().includes(word))) score -= 40;
+    if (/(.)\1{2,}/.test(pw)) score -= 15;  // same char 3+ times in a row
+
+    // keep it between 0 and 100
+    return Math.max(0, Math.min(100, score));
+  }
+
+  // updates the bar and message based on what is typed
+  function updateStrength() {
+    const pw = passwordInput.value;
+
+    // empty box: reset the bar and message
+    if (pw === "") {
+      barFill.style.width = "0%";
+      result.textContent = "";
+      return;
+    }
+
+    const score = getScore(pw);
+    barFill.style.width = score + "%";
+
+    let label;
+    if (score < 40) {
+      barFill.style.background = "#ef4444";
+      // result.textContent = "Weak";
+      label = "Weak";
+
+    } else if (score < 70) {
+      barFill.style.background = "#f59e0b";
+      // result.textContent = "Okay";
+      label = "Okay";
+    } else {
+      barFill.style.background = "#22c55e";
+      // result.textContent = "Strong";
+      label = "Strong";
+    }
+    result.textContent = `${label} (Strength: ${score}%)`;
+  }
+
+  // Event Listener so the strength bar is live
+  passwordInput.addEventListener("input", updateStrength);
+
+  // Show input 
+  toggleButton.addEventListener("click", () => {
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      toggleButton.textContent = "Hide";
+    } else {
+      passwordInput.type = "password";
+      toggleButton.textContent = "Show";
+    }
+  });
   </script>
 
 
